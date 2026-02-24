@@ -1,0 +1,21 @@
+services:
+  bot:
+    build: .
+    container_name: fin-tracker-bot
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  web:
+    build: .
+    container_name: fin-tracker-web
+    command: python web_main.py
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8089:8089"
+    restart: unless-stopped

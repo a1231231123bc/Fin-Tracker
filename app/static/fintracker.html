@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinTracker</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #14171f;
+      --card: #1a1e28;
+      --border: rgba(255,255,255,0.08);
+      --accent: #00e5a0;
+      --text: #f0f2f8;
+      --muted: #9097a5;
+      --red: #ff5f6d;
+      --green: #00e5a0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 500px at 50% -10%, rgba(0,229,160,0.12), transparent), var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+    }
+    .wrap {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px 14px 24px;
+      display: grid;
+      gap: 12px;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+    }
+    .brand span { color: var(--accent); }
+    .group {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .hero {
+      background: linear-gradient(145deg, #162335, #11202c);
+      border-color: rgba(0,229,160,0.2);
+    }
+    .label {
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .amount {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.05;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .chip {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      color: #cbd3e1;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .bars {
+      display: grid;
+      gap: 8px;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+    .bar > span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #5b8dee, #00e5a0);
+    }
+    .muted { color: var(--muted); font-family: 'DM Mono', monospace; }
+    .tx {
+      display: grid;
+      gap: 8px;
+      max-height: 360px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .tx-item {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+    .tx-title { font-size: 13px; font-weight: 700; }
+    .tx-meta { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 2px; }
+    .tx-amt { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; align-self: center; }
+    .empty {
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      text-align: center;
+      padding: 24px 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Fin<span>Tracker</span></div>
+      <div class="group" id="groupInfo">Loading...</div>
+    </div>
+
+    <div class="card hero">
+      <div class="label">Expenses Today</div>
+      <div class="amount" id="todayAmount">-</div>
+      <div class="row" style="margin-top:8px;">
+        <div class="muted">This month</div>
+        <div class="muted" id="monthAmount">-</div>
+      </div>
+      <div class="chips" id="topChips"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Today by categories</div>
+      <div class="bars" id="bars"></div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:8px;">
+        <div class="section-title" style="margin:0;">Latest transactions</div>
+        <div class="muted" id="txCount">0</div>
+      </div>
+      <div class="tx" id="tx"></div>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    const qs = new URLSearchParams(location.search);
+    const groupId = qs.get('group_id') || '';
+
+    function money(v, ccy) {
+      return `${Number(v || 0).toFixed(2)} ${ccy || ''}`.trim();
+    }
+
+    function esc(s) {
+      return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    async function load() {
+      if (!groupId) {
+        document.getElementById('groupInfo').textContent = 'Open from bot group';
+        document.getElementById('tx').innerHTML = '<div class="empty">Нет group_id. Открой приложение из сообщения бота в группе.</div>';
+        return;
+      }
+
+      const res = await fetch(`/api/dashboard?group_id=${encodeURIComponent(groupId)}`);
+      if (!res.ok) {
+        document.getElementById('groupInfo').textContent = 'Group not found';
+        document.getElementById('tx').innerHTML = '<div class="empty">Группа не найдена. Сначала отправь /setup в группе.</div>';
+        return;
+      }
+      const data = await res.json();
+      const ccy = data.group.currency;
+
+      document.getElementById('groupInfo').textContent = `${data.group.title}\n${data.group.timezone}`;
+      document.getElementById('todayAmount').textContent = money(data.totals.today, ccy);
+      document.getElementById('monthAmount').textContent = money(data.totals.month, ccy);
+
+      document.getElementById('topChips').innerHTML = `
+        <div class="chip">Today: ${money(data.totals.today, ccy)}</div>
+        <div class="chip">Month: ${money(data.totals.month, ccy)}</div>
+        <div class="chip">TZ: ${esc(data.group.timezone)}</div>
+      `;
+
+      const total = Number(data.totals.today || 0);
+      const rows = data.today_categories || [];
+      const bars = document.getElementById('bars');
+      if (!rows.length) {
+        bars.innerHTML = '<div class="empty">Сегодня расходов пока нет</div>';
+      } else {
+        bars.innerHTML = rows.map(r => {
+          const p = total > 0 ? Math.max(2, Math.round((Number(r.amount) / total) * 100)) : 0;
+          return `
+            <div class="bar-row">
+              <div>${esc(r.label)}</div>
+              <div class="bar"><span style="width:${p}%"></span></div>
+              <div class="muted">${money(r.amount, ccy)}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const tx = data.transactions || [];
+      document.getElementById('txCount').textContent = String(tx.length);
+      const txEl = document.getElementById('tx');
+      if (!tx.length) {
+        txEl.innerHTML = '<div class="empty">Транзакций пока нет</div>';
+      } else {
+        txEl.innerHTML = tx.map(t => `
+          <div class="tx-item">
+            <div>
+              <div class="tx-title">${esc(t.subcategory_label || t.category_label)}</div>
+              <div class="tx-meta">#${t.id} • user:${t.user_id}${t.note ? ' • ' + esc(t.note) : ''}</div>
+            </div>
+            <div class="tx-amt">${money(t.amount, ccy)}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    load().catch(err => {
+      console.error(err);
+      document.getElementById('groupInfo').textContent = 'Error';
+      document.getElementById('tx').innerHTML = '<div class="empty">Ошибка загрузки данных</div>';
+    });
+  </script>
+</body>
+</html>
