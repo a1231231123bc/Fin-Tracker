@@ -35,3 +35,19 @@ docker compose up --build -d
 1. В группе: `/setup AED`
 2. Пиши расходы обычными сообщениями
 3. Открой дашборд: `/app`
+
+## CI/CD (auto deploy on push to main)
+
+Workflow: `.github/workflows/deploy.yml`
+
+Что делает:
+- Деплоит `frontend/` в Vercel production
+- Синхронизирует репозиторий на VPS в `/opt/fin-tracker`
+- Перезапускает только стеки `fintracker` и `monitoring`
+- Проверяет `http://127.0.0.1:8091/health`
+
+Нужные GitHub Secrets:
+- `VERCEL_TOKEN`
+- `VPS_HOST` (например, `195.133.81.14`)
+- `VPS_USER` (например, `root`)
+- `VPS_SSH_KEY` (приватный ключ для SSH)
