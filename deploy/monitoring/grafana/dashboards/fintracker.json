@@ -1,0 +1,118 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {"text": "DOWN"},
+                "1": {"text": "UP"}
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "green", "value": 1}
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "probe_success{job=\"blackbox-fintracker-web\"}",
+          "legendFormat": "fintracker-web",
+          "refId": "A"
+        }
+      ],
+      "title": "FinTracker Web Health",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 16, "x": 8, "y": 0},
+      "id": 2,
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "single", "sort": "none"}
+      },
+      "targets": [
+        {
+          "expr": "probe_duration_seconds{job=\"blackbox-fintracker-web\", phase=\"resolve\"}",
+          "legendFormat": "resolve",
+          "refId": "A"
+        },
+        {
+          "expr": "probe_duration_seconds{job=\"blackbox-fintracker-web\", phase=\"connect\"}",
+          "legendFormat": "connect",
+          "refId": "B"
+        },
+        {
+          "expr": "probe_duration_seconds{job=\"blackbox-fintracker-web\", phase=\"processing\"}",
+          "legendFormat": "processing",
+          "refId": "C"
+        }
+      ],
+      "title": "FinTracker Web Probe Duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+      "id": 3,
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "single", "sort": "none"}
+      },
+      "targets": [
+        {
+          "expr": "up{job=\"cadvisor\"}",
+          "legendFormat": "cadvisor up",
+          "refId": "A"
+        },
+        {
+          "expr": "up{job=\"blackbox-fintracker-web\"}",
+          "legendFormat": "blackbox up",
+          "refId": "B"
+        }
+      ],
+      "title": "Monitoring Jobs Up",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["fintracker"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "FinTracker Service",
+  "uid": "fintracker-service",
+  "version": 2,
+  "weekStart": ""
+}

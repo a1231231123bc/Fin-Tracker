@@ -1,0 +1,26 @@
+services:
+  bot:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: fin-tracker-bot
+    command: python main.py
+    env_file:
+      - .env
+    volumes:
+      - ../../data:/app/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: fin-tracker-web
+    command: python web_main.py
+    env_file:
+      - .env
+    volumes:
+      - ../../data:/app/data
+    ports:
+      - "8091:8089"
+    restart: unless-stopped

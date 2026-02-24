@@ -24,6 +24,11 @@ async def index() -> FileResponse:
     return FileResponse(Path(__file__).parent / "static" / "fintracker.html")
 
 
+@app.get("/health")
+async def health() -> dict:
+    return {"status": "ok"}
+
+
 @app.get("/api/dashboard")
 async def api_dashboard(group_id: int = Query(...)) -> dict:
     group = await db.get_group_settings(group_id)

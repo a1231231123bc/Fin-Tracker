@@ -99,6 +99,12 @@ def parse_timezone(raw: str) -> str | None:
     return raw
 
 
+def build_group_app_url(settings, group_id: int) -> str:
+    if settings.tg_app_url_template:
+        return settings.tg_app_url_template.replace("{group_id}", str(group_id))
+    return f"{settings.webapp_url}?group_id={group_id}"
+
+
 def settings_keyboard(group_id: int, enabled: bool) -> InlineKeyboardMarkup:
     status_label = "Отключить" if enabled else "Включить"
     return InlineKeyboardMarkup(
@@ -113,10 +119,14 @@ def settings_keyboard(group_id: int, enabled: bool) -> InlineKeyboardMarkup:
     )
 
 
-def webapp_keyboard(url: str) -> InlineKeyboardMarkup:
+def webapp_keyboard(url: str, use_webapp_button: bool) -> InlineKeyboardMarkup:
+    if use_webapp_button:
+        button = InlineKeyboardButton(text="Open App", web_app=WebAppInfo(url=url))
+    else:
+        button = InlineKeyboardButton(text="Open App", url=url)
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="Open App", web_app=WebAppInfo(url=url))]
+            [button]
         ]
     )
 
@@ -314,7 +324,7 @@ async def main() -> None:
                 settings.default_currency,
                 settings.default_timezone,
             )
-            app_url = f"{settings.webapp_url}?group_id={message.chat.id}"
+            app_url = build_group_app_url(settings, message.chat.id)
             await message.answer(
                 "Бот активен в группе. Просто пиши расход текстом: `450 кофе`.\n"
                 "Команды статистики: /today /month /last /undo\n"
@@ -322,7 +332,7 @@ async def main() -> None:
                 "Открыть приложение: /app",
                 parse_mode="Markdown",
             )
-            await message.answer("Открыть WebApp:", reply_markup=webapp_keyboard(app_url))
+            await message.answer("Открыть TG App:", reply_markup=webapp_keyboard(app_url, use_webapp_button=False))
             return
 
         await message.answer(
@@ -333,18 +343,19 @@ async def main() -> None:
 
     @dp.message(Command("app"))
     async def cmd_app(message: Message) -> None:
-        if not ensure_group_chat(message):
-            await message.answer("Открой команду /app внутри группы, чтобы видеть данные группы.")
+        if ensure_group_chat(message):
+            await db.ensure_group(
+                message.chat.id,
+                message.chat.title or "",
+                settings.default_currency,
+                settings.default_timezone,
+            )
+            app_url = build_group_app_url(settings, message.chat.id)
+            await message.answer("Открыть TG App:", reply_markup=webapp_keyboard(app_url, use_webapp_button=False))
             return
 
-        await db.ensure_group(
-            message.chat.id,
-            message.chat.title or "",
-            settings.default_currency,
-            settings.default_timezone,
-        )
-        app_url = f"{settings.webapp_url}?group_id={message.chat.id}"
-        await message.answer("Открыть WebApp:", reply_markup=webapp_keyboard(app_url))
+        app_url = settings.webapp_url
+        await message.answer("Открыть TG App:", reply_markup=webapp_keyboard(app_url, use_webapp_button=True))
 
     @dp.message(Command("setup"))
     async def cmd_setup(message: Message, command: CommandObject) -> None:

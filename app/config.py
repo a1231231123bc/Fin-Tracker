@@ -13,6 +13,7 @@ class Settings:
     default_timezone: str
     reminder_check_interval_sec: int
     webapp_url: str
+    tg_app_url_template: str
 
 
 
@@ -39,6 +40,7 @@ def load_settings() -> Settings:
         reminder_interval = 60
     reminder_interval = max(15, min(3600, reminder_interval))
     webapp_url = os.getenv("WEBAPP_URL", "http://localhost:8089").strip() or "http://localhost:8089"
+    tg_app_url_template = os.getenv("TG_APP_URL_TEMPLATE", "").strip()
 
     return Settings(
         bot_token=token,
@@ -48,4 +50,5 @@ def load_settings() -> Settings:
         default_timezone=default_timezone,
         reminder_check_interval_sec=reminder_interval,
         webapp_url=webapp_url,
+        tg_app_url_template=tg_app_url_template,
     )
